@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Auth ────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  role      UserRole @default(USER)
+  tier      UserTier @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  posts         Post[]
+  toolUsages    ToolUsage[]
+  subscriptions Subscription[]
+
+  @@index([email])
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  EDITOR
+}
+
+enum UserTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ─── Blog ────────────────────────────────────────────────────────
+model Post {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  title       String
+  description String
+  content     String      @db.Text
+  coverImage  String?
+  publishedAt DateTime?
+  featured    Boolean     @default(false)
+  views       Int         @default(0)
+  readingTime Int         @default(0) // minutes
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  tags       Tag[]
+
+  @@index([slug])
+  @@index([publishedAt])
+  @@index([categoryId])
+  @@map("posts")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  name        String
+  description String?
+  icon        String?
+  color       String?
+  type        CategoryType @default(BLOG)
+  createdAt   DateTime   @default(now())
+
+  posts Post[]
+  tools Tool[]
+
+  @@index([slug])
+  @@index([type])
+  @@map("categories")
+}
+
+enum CategoryType {
+  BLOG
+  TOOL
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  slug  String @unique
+  name  String
+  posts Post[]
+
+  @@map("tags")
+}
+
+// ─── Tools ───────────────────────────────────────────────────────
+model Tool {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  icon        String?
+  tier        ToolTier @default(FREE)
+  isPublished Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+  usages     ToolUsage[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isPublished])
+  @@map("tools")
+}
+
+enum ToolTier {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+model ToolUsage {
+  id        String   @id @default(cuid())
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([toolId])
+  @@index([createdAt])
+  @@map("tool_usages")
+}
+
+// ─── Monetization ────────────────────────────────────────────────
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String
+  user                 User               @relation(fields: [userId], references: [id])
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(INACTIVE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}

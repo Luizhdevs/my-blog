@@ -1,7 +1,54 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  /* config options here */
-};
+  // ─── Qualidade de código ──────────────────────────────────────
+  typescript: { ignoreBuildErrors: false },
 
-export default nextConfig;
+  // ─── Performance ──────────────────────────────────────────────
+  compress:      true,
+  poweredByHeader: false, // remove X-Powered-By por segurança
+  reactStrictMode: true,
+
+  // ─── Imagens ──────────────────────────────────────────────────
+  images: {
+    formats: ["image/avif", "image/webp"],
+    deviceSizes: [375, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes:  [16, 32, 48, 64, 96, 128, 256],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+      },
+    ],
+  },
+
+  // ─── Headers de segurança ─────────────────────────────────────
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          { key: "X-Content-Type-Options",    value: "nosniff" },
+          { key: "X-Frame-Options",            value: "DENY" },
+          { key: "X-XSS-Protection",           value: "1; mode=block" },
+          { key: "Referrer-Policy",            value: "strict-origin-when-cross-origin" },
+          {
+            key:   "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+        ],
+      },
+    ]
+  },
+
+  // ─── Redirects ────────────────────────────────────────────────
+  async redirects() {
+    return []
+  },
+}
+
+export default nextConfig
