@@ -11,8 +11,8 @@ import { CurrencyForm } from "@/components/tools/forms/CurrencyForm"
 import { PercentageForm } from "@/components/tools/forms/PercentageForm"
 import { Container } from "@/components/shared/Container"
 import { Section } from "@/components/shared/Section"
-import { createMetadata } from "@/lib/metadata"
-import { siteConfig } from "@/config/site"
+import { createMetadata, toolOGImage } from "@/lib/metadata"
+import { siteConfig }                  from "@/config/site"
 
 // ─── Static params ────────────────────────────────────────────────────────────
 
@@ -35,13 +35,14 @@ export async function generateMetadata({
     title:       tool.name,
     description: tool.description,
     slug:        `ferramentas/${tool.slug}`,
+    image:       toolOGImage(tool),
     keywords:    tool.keywords,
   })
 }
 
 // ─── Form component map ───────────────────────────────────────────────────────
 
-const TOOL_FORMS: Record<string, React.ComponentType> = {
+const TOOL_FORMS: Record<string, React.ComponentType<{ toolSlug: string }>> = {
   "juros-compostos":          CompoundInterestForm,
   "calculadora-porcentagem":  PercentageForm,
   "conversor-moedas":         CurrencyForm,
@@ -91,7 +92,7 @@ export default async function ToolPage({
         <Section spacing="default">
           <Container size="md">
             {FormComponent ? (
-              <FormComponent />
+              <FormComponent toolSlug={slug} />
             ) : (
               <p className="text-muted-foreground">
                 Esta ferramenta está em desenvolvimento.

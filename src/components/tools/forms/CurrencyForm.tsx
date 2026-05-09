@@ -11,10 +11,13 @@ import {
   RATES_LAST_UPDATED,
   type CurrencyInput,
 } from "@/features/tools/tools/currency"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useToolUsageTracker } from "@/hooks/useToolUsageTracker"
+import { Button }              from "@/components/ui/button"
+import { Input }               from "@/components/ui/input"
 import { MetricCard, ToolResult } from "@/components/tools/ToolResult"
-import { cn } from "@/lib/utils"
+import { cn }                  from "@/lib/utils"
+
+interface ToolFormProps { toolSlug: string }
 
 const selectCls = cn(
   "h-8 w-full rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm text-foreground",
@@ -23,7 +26,7 @@ const selectCls = cn(
   "dark:bg-input/30",
 )
 
-export function CurrencyForm() {
+export function CurrencyForm({ toolSlug }: ToolFormProps) {
   const { register, watch, getValues, setValue } = useForm<CurrencyInput>({
     resolver:      zodResolver(currencySchema),
     defaultValues: { amount: 100, from: "USD", to: "BRL" },
@@ -33,6 +36,8 @@ export function CurrencyForm() {
   const values = watch()
   const parsed = currencySchema.safeParse(values)
   const result = parsed.success ? computeCurrency(parsed.data) : null
+
+  useToolUsageTracker(toolSlug, result !== null && values.amount > 0)
 
   const handleSwap = () => {
     const { from, to } = getValues()

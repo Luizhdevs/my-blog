@@ -1,30 +1,27 @@
-export interface Post {
-  id:          string
-  slug:        string
+export interface PostFrontmatter {
   title:       string
   description: string
-  content:     string
-  coverImage:  string | null
-  publishedAt: Date | null
-  featured:    boolean
-  views:       number
-  readingTime: number
-  author: {
-    id:        string
-    name:      string | null
-    avatarUrl: string | null
-  }
-  category: {
-    id:   string
-    slug: string
-    name: string
-  } | null
-  tags: { id: string; slug: string; name: string }[]
+  publishedAt: string        // ISO date string "2025-05-01"
+  updatedAt?:  string
+  category:    string        // slug, e.g. "tecnologia"
+  tags:        string[]
+  coverImage?: string
+  featured?:   boolean
+  draft?:      boolean
+  author?:     string        // override; defaults to siteConfig.author.name
 }
 
-export interface PostCard
-  extends Pick<Post, "slug" | "title" | "description" | "coverImage" | "publishedAt" | "readingTime" | "featured"> {
-  author:   Pick<Post["author"], "name" | "avatarUrl">
-  category: Post["category"]
-  tags:     Post["tags"]
+export interface PostMeta extends PostFrontmatter {
+  slug:        string
+  readingTime: number        // minutes, rounded
+}
+
+export interface Post extends PostMeta {
+  content: string            // raw MDX source
+}
+
+export interface TOCEntry {
+  id:       string
+  text:     string
+  level:    2 | 3 | 4
 }

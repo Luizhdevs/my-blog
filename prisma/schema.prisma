@@ -39,20 +39,30 @@ enum UserTier {
 }
 
 // ─── Blog ────────────────────────────────────────────────────────
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
+
 model Post {
-  id          String      @id @default(cuid())
-  slug        String      @unique
-  title       String
-  description String
-  content     String      @db.Text
-  coverImage  String?
-  publishedAt DateTime?
-  featured    Boolean     @default(false)
-  views       Int         @default(0)
-  readingTime Int         @default(0) // minutes
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  deletedAt   DateTime?
+  id             String      @id @default(cuid())
+  slug           String      @unique
+  title          String
+  description    String
+  content        String      @db.Text
+  coverImage     String?
+  status         PostStatus  @default(DRAFT)
+  publishedAt    DateTime?
+  featured       Boolean     @default(false)
+  views          Int         @default(0)
+  readingTime    Int         @default(0) // minutes
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  deletedAt      DateTime?
 
   authorId   String
   author     User     @relation(fields: [authorId], references: [id])
@@ -61,6 +71,7 @@ model Post {
   tags       Tag[]
 
   @@index([slug])
+  @@index([status])
   @@index([publishedAt])
   @@index([categoryId])
   @@map("posts")

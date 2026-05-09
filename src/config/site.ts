@@ -7,7 +7,7 @@ export const siteConfig = {
   description:
     "Plataforma de blog, ferramentas digitais, calculadoras online e utilidades. Conteúdo de qualidade e ferramentas gratuitas.",
   url:         appUrl,
-  ogImage:     `${appUrl}/og/default.png`,
+  ogImage:     `${appUrl}/og/default`,
   keywords: [
     "blog",
     "ferramentas online",

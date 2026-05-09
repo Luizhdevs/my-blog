@@ -1,0 +1,96 @@
+---
+title: "Por que juros compostos são a oitava maravilha do mundo"
+description: "Entenda como o efeito do tempo e dos juros compostos pode transformar pequenos investimentos em grandes patrimônios — e como evitar que a dívida faça o mesmo contra você."
+publishedAt: "2025-04-15"
+category: "financeiro"
+tags: ["juros compostos", "investimento", "educação financeira", "tempo"]
+coverImage: "/images/blog/juros-compostos.jpg"
+featured: true
+---
+
+Dizem que Einstein teria chamado os juros compostos de "a oitava maravilha do mundo". Seja verdade ou não, a ideia por trás da frase é matematicamente irrefutável: **dinheiro que cresce sobre si mesmo tem um poder acumulativo que parece quase mágico**.
+
+## O que são juros compostos?
+
+No sistema de juros simples, os juros incidem sempre sobre o capital inicial. Se você investe R$ 1.000 a 1% ao mês, cada mês você ganha R$ 10. Simples assim.
+
+Nos juros compostos, os juros do mês anterior se somam ao principal — e passam a render também. No segundo mês você não ganha mais R$ 10, mas R$ 10,10. Parece irrelevante? Continue lendo.
+
+## A fórmula e o que ela realmente significa
+
+A fórmula clássica é:
+
+```
+M = P × (1 + r)^n
+```
+
+Onde:
+- **M** = montante final
+- **P** = principal (valor inicial)
+- **r** = taxa de juros por período (em decimal)
+- **n** = número de períodos
+
+Vamos ao exemplo prático: R$ 10.000 investidos a **1% ao mês** por **10 anos** (120 meses).
+
+```js
+const principal = 10_000
+const rate      = 0.01          // 1% ao mês
+const periods   = 120           // 10 anos
+
+const montante = principal * Math.pow(1 + rate, periods)
+// → R$ 33.003,87
+```
+
+Você triplicou o valor sem fazer **absolutamente nada** além de esperar.
+
+## O componente invisível: o tempo
+
+O fator `n` no expoente é o que dá ao tempo seu poder assimétrico. Veja a diferença entre começar cedo e começar tarde, com a mesma taxa de 0,8% ao mês:
+
+| Início | Investimento mensal | Período | Patrimônio final |
+|--------|-------------------|---------|-----------------|
+| Aos 20 | R$ 300/mês | 40 anos | ~R$ 1.050.000 |
+| Aos 30 | R$ 300/mês | 30 anos | ~R$ 440.000 |
+| Aos 40 | R$ 600/mês | 20 anos | ~R$ 350.000 |
+
+A pessoa que começou aos 20 investiu **o mesmo valor mensal** que a que começou aos 30 — e terminou com o **dobro do patrimônio**. A que começou aos 40 investiu o *dobro por mês* e ainda assim ficou atrás.
+
+> O melhor momento para começar a investir foi ontem. O segundo melhor momento é hoje.
+
+## A regra dos 72
+
+Existe um atalho mental elegante chamado **Regra dos 72**: divida 72 pela taxa de juros e obtenha (aproximadamente) quantos períodos leva para dobrar o capital.
+
+- Taxa de 1% ao mês → 72 ÷ 1 = **~72 meses** (6 anos) para dobrar
+- Taxa de 6% ao ano → 72 ÷ 6 = **~12 anos** para dobrar
+- Taxa de 12% ao ano → 72 ÷ 12 = **~6 anos** para dobrar
+
+É uma aproximação, mas surpreendentemente precisa para taxas entre 2% e 20%.
+
+## A face sombria: dívidas com juros compostos
+
+Tudo que você aprendeu acima funciona *igualmente* contra você quando você é devedor.
+
+Um cartão de crédito com **juros rotativos de 15% ao mês** sobre uma dívida de R$ 5.000:
+
+```
+Mês 1:  R$ 5.750
+Mês 3:  R$ 7.604
+Mês 6:  R$ 11.571
+Mês 12: R$ 26.764
+```
+
+Em um ano, a dívida quintuplicou. Esse é exatamente o mesmo mecanismo — só que trabalhando contra você.
+
+## Como aplicar na prática
+
+1. **Comece com qualquer valor** — a matemática funciona com R$ 50 ou R$ 50.000
+2. **Seja consistente** — aportes regulares amplificam o efeito exponencial
+3. **Evite resgates** — cada saque interrompe o ciclo de capitalização
+4. **Quite dívidas caras primeiro** — nenhum investimento rende 15% ao mês como o cartão cobra
+
+Use nossa [Calculadora de Juros Compostos](/ferramentas/juros-compostos) para simular seus próprios cenários e ver o crescimento projetado ao longo do tempo.
+
+## Conclusão
+
+Juros compostos são neutros — são uma força matemática que serve tanto ao investidor quanto ao credor. O que determina de que lado você está é, quase sempre, uma questão de hábito e de começar cedo. A boa notícia: qualquer momento é melhor do que nunca.

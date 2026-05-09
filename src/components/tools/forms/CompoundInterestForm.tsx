@@ -8,9 +8,12 @@ import {
   computeCompoundInterest,
   type CompoundInterestInput,
 } from "@/features/tools/tools/compound-interest"
-import { Input } from "@/components/ui/input"
+import { useToolUsageTracker } from "@/hooks/useToolUsageTracker"
+import { Input }               from "@/components/ui/input"
 import { MetricCard, ToolResult } from "@/components/tools/ToolResult"
-import { cn } from "@/lib/utils"
+import { cn }                  from "@/lib/utils"
+
+interface ToolFormProps { toolSlug: string }
 
 function formatBRL(value: number) {
   return new Intl.NumberFormat("pt-BR", {
@@ -22,7 +25,7 @@ function formatBRL(value: number) {
 const labelCls = "mb-1.5 block text-sm font-medium text-foreground"
 const errorCls = "mt-1 text-xs text-destructive"
 
-export function CompoundInterestForm() {
+export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
   const {
     register,
     watch,
@@ -36,6 +39,8 @@ export function CompoundInterestForm() {
   const values = watch()
   const parsed = compoundInterestSchema.safeParse(values)
   const result = parsed.success ? computeCompoundInterest(parsed.data) : null
+
+  useToolUsageTracker(toolSlug, result !== null)
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">

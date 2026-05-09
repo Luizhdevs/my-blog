@@ -11,9 +11,12 @@ import {
   type PercentageInput,
   type PercentageMode,
 } from "@/features/tools/tools/percentage"
-import { Input } from "@/components/ui/input"
+import { useToolUsageTracker } from "@/hooks/useToolUsageTracker"
+import { Input }               from "@/components/ui/input"
 import { MetricCard, ToolResult } from "@/components/tools/ToolResult"
-import { cn } from "@/lib/utils"
+import { cn }                  from "@/lib/utils"
+
+interface ToolFormProps { toolSlug: string }
 
 const MODE_FIELD_LABELS: Record<
   PercentageMode,
@@ -28,7 +31,7 @@ const MODE_FIELD_LABELS: Record<
 
 const labelCls = "mb-1.5 block text-sm font-medium text-foreground"
 
-export function PercentageForm() {
+export function PercentageForm({ toolSlug }: ToolFormProps) {
   const [mode, setMode] = useState<PercentageMode>("percent-of")
 
   const { register, watch, setValue } = useForm<PercentageInput>({
@@ -45,6 +48,8 @@ export function PercentageForm() {
   const values = watch()
   const parsed = percentageSchema.safeParse({ ...values, mode })
   const result = parsed.success ? computePercentage(parsed.data) : null
+
+  useToolUsageTracker(toolSlug, result !== null)
 
   const labels = MODE_FIELD_LABELS[mode]
 

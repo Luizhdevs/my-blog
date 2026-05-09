@@ -3,7 +3,9 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google"
 import { ThemeProvider } from "next-themes"
 
 import "@/app/globals.css"
-import { siteConfig } from "@/config/site"
+import { siteConfig }         from "@/config/site"
+import { GoogleAnalytics }    from "@/components/shared/GoogleAnalytics"
+import { PageViewTracker }    from "@/components/shared/PageViewTracker"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -62,6 +64,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GSC_VERIFICATION || undefined,
+  },
   icons: {
     icon: "/favicon.ico",
     shortcut: "/icons/icon-32x32.png",
@@ -98,7 +103,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
           disableTransitionOnChange
         >
           {children}
+          <PageViewTracker />
         </ThemeProvider>
+        <GoogleAnalytics />
       </body>
     </html>
   )
