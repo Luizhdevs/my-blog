@@ -1,10 +1,13 @@
+const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://meublog.com.br"
+
 export const siteConfig = {
   name:        "My Blog",
   tagline:     "Ferramentas, blog e utilidades para o seu dia a dia",
   description:
     "Plataforma de blog, ferramentas digitais, calculadoras online e utilidades. Conteúdo de qualidade e ferramentas gratuitas.",
-  url:         "https://meublog.com.br",
-  ogImage:     "https://meublog.com.br/og/default.png",
+  url:         appUrl,
+  ogImage:     `${appUrl}/og/default.png`,
   keywords: [
     "blog",
     "ferramentas online",
