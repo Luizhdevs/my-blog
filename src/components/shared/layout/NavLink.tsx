@@ -3,15 +3,15 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { cn } from "@/lib/utils"
+import { cn, isActiveLink } from "@/lib/utils"
 
 interface NavLinkProps {
-  href:            string
-  children:        React.ReactNode
-  className?:      string
+  href:             string
+  children:         React.ReactNode
+  className?:       string
   activeClassName?: string
-  exact?:          boolean
-  onClick?:        () => void
+  exact?:           boolean
+  onClick?:         () => void
 }
 
 export function NavLink({
@@ -23,19 +23,18 @@ export function NavLink({
   onClick,
 }: NavLinkProps) {
   const pathname = usePathname()
-  const isActive = exact
-    ? pathname === href
-    : pathname === href || (href !== "/" && pathname.startsWith(href))
+  const active   = isActiveLink(pathname, href, exact)
 
   return (
     <Link
       href={href}
       onClick={onClick}
-      data-active={isActive || undefined}
+      data-active={active || undefined}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "text-sm font-medium transition-colors duration-150",
         "hover:text-foreground focus-visible:text-foreground",
-        isActive
+        active
           ? cn("text-foreground", activeClassName)
           : "text-muted-foreground",
         className,

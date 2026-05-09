@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Logo } from "@/components/shared/Logo"
 import { mainNav, toolCategories } from "@/config/navigation"
-import { cn } from "@/lib/utils"
+import { cn, isActiveLink } from "@/lib/utils"
 
 interface MobileNavProps {
   open:    boolean
@@ -40,8 +40,7 @@ const panelVariants: Variants = {
 export function MobileNav({ open, onClose, id }: MobileNavProps) {
   const pathname = usePathname()
 
-  const isActive = (href: string) =>
-    pathname === href || (href !== "/" && pathname.startsWith(href))
+  const isActive = (href: string) => isActiveLink(pathname, href)
 
   return (
     <AnimatePresence>

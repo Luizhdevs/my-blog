@@ -1,7 +1,3 @@
-"use client"
-
-import { motion } from "framer-motion"
-
 import { cn } from "@/lib/utils"
 
 interface LoadingSpinnerProps {
@@ -23,21 +19,18 @@ export function LoadingSpinner({
   label = "Carregando...",
 }: LoadingSpinnerProps) {
   return (
-    <motion.span
+    <span
       role="status"
       aria-label={label}
       className={cn(
-        "inline-block rounded-full border-border border-t-primary",
+        "inline-block animate-spin rounded-full border-border border-t-primary",
         sizes[size],
         className,
       )}
-      animate={{ rotate: 360 }}
-      transition={{ duration: 0.75, repeat: Infinity, ease: "linear" }}
     />
   )
 }
 
-/* Centered loading state — para uso em páginas inteiras */
 export function PageLoading({ label }: { label?: string }) {
   return (
     <div

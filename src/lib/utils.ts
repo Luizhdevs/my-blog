@@ -50,3 +50,13 @@ export function truncate(text: string, maxLength: number): string {
 export function typedEntries<T extends object>(obj: T) {
   return Object.entries(obj) as [keyof T, T[keyof T]][]
 }
+
+/**
+ * Determina se um href está ativo com base no pathname atual.
+ * Usa correspondência de segmento de path para evitar false-positives
+ * (ex: /blog não deve ativar /blog-archive).
+ */
+export function isActiveLink(pathname: string, href: string, exact = false): boolean {
+  if (exact || href === "/") return pathname === href
+  return pathname === href || pathname.startsWith(href + "/")
+}
