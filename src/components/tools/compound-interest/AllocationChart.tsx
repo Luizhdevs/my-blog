@@ -13,6 +13,8 @@ import {
 
 import type { YearSummary } from "@/features/tools/tools/compound-interest"
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 interface ChartPayloadItem {
   dataKey?: string | number
   value?:   number
@@ -35,32 +37,43 @@ const fmtAxis = (v: number) => {
   return `R$${v.toFixed(0)}`
 }
 
-// ─── Custom tooltip ───────────────────────────────────────────────────────────
+// ─── Tooltip ─────────────────────────────────────────────────────────────────
 
 function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload?.length) return null
   const invested = payload.find(p => p.dataKey === "invested")?.value ?? 0
   const interest = payload.find(p => p.dataKey === "interest")?.value ?? 0
+  const total    = invested + interest
+  const interestPct = total > 0 ? ((interest / total) * 100).toFixed(1) : "0"
 
   return (
     <div
       role="tooltip"
-      className="min-w-[180px] rounded-xl border border-border bg-popover px-4 py-3 shadow-lg text-sm"
+      className="min-w-[190px] rounded-xl border border-border bg-popover px-4 py-3 shadow-xl text-sm"
     >
-      <p className="mb-2 font-semibold text-foreground">{label}</p>
-      <dl className="flex flex-col gap-1">
-        <div className="flex justify-between gap-6">
-          <dt className="text-muted-foreground">Investido</dt>
+      <p className="mb-2.5 font-semibold text-foreground">{label}</p>
+      <dl className="flex flex-col gap-1.5">
+        <div className="flex justify-between gap-8">
+          <dt className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-2 rounded-full bg-blue-500 shrink-0" />
+            Investido
+          </dt>
           <dd className="tabular-nums font-medium text-foreground">{fmtBRL(invested)}</dd>
         </div>
-        <div className="flex justify-between gap-6">
-          <dt className="text-muted-foreground">Juros</dt>
+        <div className="flex justify-between gap-8">
+          <dt className="flex items-center gap-1.5 text-muted-foreground">
+            <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
+            Juros
+          </dt>
           <dd className="tabular-nums font-medium text-emerald-600 dark:text-emerald-400">{fmtBRL(interest)}</dd>
         </div>
-        <div className="mt-1 flex justify-between gap-6 border-t border-border pt-1">
+        <div className="mt-1 flex justify-between gap-8 border-t border-border pt-2">
           <dt className="font-semibold text-foreground">Total</dt>
-          <dd className="tabular-nums font-bold text-primary">{fmtBRL(invested + interest)}</dd>
+          <dd className="tabular-nums font-bold text-primary">{fmtBRL(total)}</dd>
         </div>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {interestPct}% do patrimônio é rendimento
+        </p>
       </dl>
     </div>
   )
@@ -81,20 +94,25 @@ export function AllocationChart({ data }: AllocationChartProps) {
 
   return (
     <section
-      aria-label="Gráfico comparativo: aportes versus juros"
+      aria-label="Gráfico de composição patrimonial por ano"
       className="rounded-2xl border border-border bg-card p-5 shadow-soft"
     >
-      <h3 className="mb-1 font-heading text-base font-semibold text-foreground">
-        Aportes vs Rendimentos
-      </h3>
-      <p className="mb-4 text-xs text-muted-foreground">
-        Composição do patrimônio ao final de cada ano: capital investido e juros acumulados
-      </p>
+      <div className="mb-4">
+        <h3 className="font-heading text-base font-semibold text-foreground">
+          Composição Patrimonial
+        </h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Capital investido vs juros acumulados ao final de cada ano
+        </p>
+      </div>
 
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-
+        <BarChart data={chartData} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="hsl(var(--border))"
+            vertical={false}
+          />
           <XAxis
             dataKey="label"
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
@@ -108,18 +126,34 @@ export function AllocationChart({ data }: AllocationChartProps) {
             tickLine={false}
             width={72}
           />
-
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.5 }} />
-
+          <Tooltip
+            content={<CustomTooltip />}
+            cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
+          />
           <Legend
             formatter={(value: string) =>
-              value === "invested" ? "Investido" : "Juros"
+              value === "invested" ? "Capital Investido" : "Juros"
             }
-            wrapperStyle={{ fontSize: "12px" }}
+            wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
           />
-
-          <Bar dataKey="invested" stackId="a" fill="#3B82F6" radius={[0, 0, 4, 4]} />
-          <Bar dataKey="interest" stackId="a" fill="#10B981" radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="invested"
+            stackId="a"
+            fill="#3B82F6"
+            radius={[0, 0, 3, 3]}
+            isAnimationActive
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
+          <Bar
+            dataKey="interest"
+            stackId="a"
+            fill="#10B981"
+            radius={[3, 3, 0, 0]}
+            isAnimationActive
+            animationDuration={700}
+            animationEasing="ease-out"
+          />
         </BarChart>
       </ResponsiveContainer>
     </section>

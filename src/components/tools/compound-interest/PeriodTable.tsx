@@ -1,137 +1,251 @@
 "use client"
 
-import { useCallback } from "react"
-import { Download }    from "lucide-react"
+import { useState, useCallback } from "react"
+import { Download, Calendar }    from "lucide-react"
 
-import type { YearSummary } from "@/features/tools/tools/compound-interest"
-import { cn }               from "@/lib/utils"
+import type {
+  YearSummary,
+  PeriodSnapshot,
+} from "@/features/tools/tools/compound-interest"
+import { cn } from "@/lib/utils"
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ViewMode = "annual" | "monthly"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)
 
-function buildCSV(data: YearSummary[]): string {
+function buildAnnualCSV(data: YearSummary[]): string {
   const header = ["Ano", "Aportado no Período", "Juros do Período", "Juros Acumulados", "Patrimônio"]
-  const rows   = data.map(y => [
-    y.year,
-    y.yearContrib.toFixed(2).replace(".", ","),
-    y.yearInterest.toFixed(2).replace(".", ","),
-    y.interest.toFixed(2).replace(".", ","),
-    y.balance.toFixed(2).replace(".", ","),
+  const rows   = data.map(r => [
+    `${r.year}º ano`,
+    r.yearContrib.toFixed(2).replace(".", ","),
+    r.yearInterest.toFixed(2).replace(".", ","),
+    r.interest.toFixed(2).replace(".", ","),
+    r.balance.toFixed(2).replace(".", ","),
   ])
   return [header, ...rows].map(r => r.join(";")).join("\n")
 }
 
-function downloadCSV(data: YearSummary[]) {
-  const csv  = buildCSV(data)
-  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" })
+function buildMonthlyCSV(data: PeriodSnapshot[]): string {
+  const header = ["Mês", "Total Investido", "Juros do Mês", "Juros Acumulados", "Saldo"]
+  const rows   = data.map(r => [
+    `Mês ${r.period}`,
+    r.invested.toFixed(2).replace(".", ","),
+    r.earnedThis.toFixed(2).replace(".", ","),
+    r.interest.toFixed(2).replace(".", ","),
+    r.balance.toFixed(2).replace(".", ","),
+  ])
+  return [header, ...rows].map(r => r.join(";")).join("\n")
+}
+
+function downloadCSV(content: string, filename: string) {
+  const blob = new Blob(["﻿" + content], { type: "text/csv;charset=utf-8;" })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement("a")
   a.href     = url
-  a.download = "juros-compostos.csv"
+  a.download = filename
   a.click()
   URL.revokeObjectURL(url)
 }
 
 // ─── Table ────────────────────────────────────────────────────────────────────
 
+const thCls = "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap"
+const tdCls = "px-4 py-2.5 tabular-nums text-sm"
+
 interface PeriodTableProps {
-  data: YearSummary[]
+  yearSummaries:  YearSummary[]
+  monthlyPeriods: PeriodSnapshot[]
 }
 
-export function PeriodTable({ data }: PeriodTableProps) {
-  const handleExport = useCallback(() => downloadCSV(data), [data])
+export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps) {
+  const [view, setView] = useState<ViewMode>("annual")
+
+  const handleExport = useCallback(() => {
+    if (view === "annual") {
+      downloadCSV(buildAnnualCSV(yearSummaries), "juros-compostos-anual.csv")
+    } else {
+      downloadCSV(buildMonthlyCSV(monthlyPeriods), "juros-compostos-mensal.csv")
+    }
+  }, [view, yearSummaries, monthlyPeriods])
+
+  const rowCount = view === "annual" ? yearSummaries.length : monthlyPeriods.length
 
   return (
     <section
       aria-label="Tabela de evolução por período"
-      className="rounded-2xl border border-border bg-card shadow-soft"
+      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">
-            Evolução por Período
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {data.length} {data.length === 1 ? "ano" : "anos"} de simulação
-          </p>
+      {/* ── Header ────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex items-center gap-3">
+          <Calendar className="size-4 text-muted-foreground" aria-hidden="true" />
+          <div>
+            <h3 className="font-heading text-base font-semibold text-foreground">
+              Evolução Detalhada
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {rowCount} {view === "annual" ? (rowCount === 1 ? "ano" : "anos") : (rowCount === 1 ? "mês" : "meses")} de simulação
+            </p>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={handleExport}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50",
-            "px-3 py-1.5 text-xs font-medium text-muted-foreground",
-            "transition-colors hover:bg-muted hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          )}
-          aria-label="Exportar tabela como CSV"
-        >
-          <Download className="size-3.5" aria-hidden="true" />
-          Exportar CSV
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div
+            role="group"
+            aria-label="Visualização"
+            className="flex rounded-lg border border-input bg-muted/50 p-0.5 gap-0.5"
+          >
+            {(["annual", "monthly"] as const).map(v => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                aria-pressed={view === v}
+                className={cn(
+                  "rounded-md px-3 py-1 text-xs font-medium transition-all",
+                  view === v
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {v === "annual" ? "Por Ano" : "Por Mês"}
+              </button>
+            ))}
+          </div>
+
+          {/* Export */}
+          <button
+            type="button"
+            onClick={handleExport}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50",
+              "px-3 py-1.5 text-xs font-medium text-muted-foreground",
+              "transition-colors hover:bg-muted hover:text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            )}
+            aria-label="Exportar tabela como CSV"
+          >
+            <Download className="size-3.5" aria-hidden="true" />
+            CSV
+          </button>
+        </div>
       </div>
 
-      {/* Scroll wrapper */}
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[560px] text-sm" role="table">
-          <thead>
-            <tr className="border-b border-border bg-muted/40">
-              <th scope="col" className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Ano
-              </th>
-              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Aportado
-              </th>
-              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Juros do Período
-              </th>
-              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Juros Acumulados
-              </th>
-              <th scope="col" className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Patrimônio
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, i) => {
-              const isLast = i === data.length - 1
-              return (
-                <tr
-                  key={row.year}
-                  className={cn(
-                    "border-b border-border/50 transition-colors hover:bg-muted/30",
-                    i % 2 === 0 ? "bg-transparent" : "bg-muted/10",
-                    isLast && "border-b-0 font-semibold",
-                  )}
-                >
-                  <td className="px-4 py-2.5 tabular-nums text-foreground">
-                    {row.year}º ano
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-foreground">
-                    {fmtBRL(row.yearContrib)}
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-emerald-600 dark:text-emerald-400">
-                    {fmtBRL(row.yearInterest)}
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
-                    {fmtBRL(row.interest)}
-                  </td>
-                  <td className={cn(
-                    "px-4 py-2.5 text-right tabular-nums",
-                    isLast ? "text-primary" : "text-foreground",
-                  )}>
-                    {fmtBRL(row.balance)}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {/* ── Table ─────────────────────────────────────────────── */}
+      <div
+        className="overflow-x-auto overflow-y-auto"
+        style={{ maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined }}
+      >
+        {view === "annual" ? (
+          <AnnualTable data={yearSummaries} />
+        ) : (
+          <MonthlyTable data={monthlyPeriods} />
+        )}
       </div>
     </section>
+  )
+}
+
+// ─── Annual table ─────────────────────────────────────────────────────────────
+
+function AnnualTable({ data }: { data: YearSummary[] }) {
+  return (
+    <table className="w-full min-w-[580px] text-sm" role="table">
+      <thead className="sticky top-0 z-10">
+        <tr className="border-b border-border bg-muted/60 backdrop-blur-sm">
+          <th scope="col" className={thCls}>Ano</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Aportado</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros do Ano</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros Acumulados</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Patrimônio</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, i) => {
+          const isLast = i === data.length - 1
+          return (
+            <tr
+              key={row.year}
+              className={cn(
+                "border-b border-border/40 transition-colors hover:bg-muted/30",
+                i % 2 !== 0 && "bg-muted/10",
+                isLast && "border-b-0",
+              )}
+            >
+              <td className={cn(tdCls, isLast && "font-semibold")}>
+                {row.year}º ano
+              </td>
+              <td className={cn(tdCls, "text-right text-foreground", isLast && "font-semibold")}>
+                {fmtBRL(row.yearContrib)}
+              </td>
+              <td className={cn(tdCls, "text-right text-emerald-600 dark:text-emerald-400", isLast && "font-semibold")}>
+                {fmtBRL(row.yearInterest)}
+              </td>
+              <td className={cn(tdCls, "text-right text-muted-foreground", isLast && "font-semibold text-foreground")}>
+                {fmtBRL(row.interest)}
+              </td>
+              <td className={cn(tdCls, "text-right", isLast ? "font-bold text-primary" : "text-foreground")}>
+                {fmtBRL(row.balance)}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
+  )
+}
+
+// ─── Monthly table ────────────────────────────────────────────────────────────
+
+function MonthlyTable({ data }: { data: PeriodSnapshot[] }) {
+  return (
+    <table className="w-full min-w-[580px] text-sm" role="table">
+      <thead className="sticky top-0 z-10">
+        <tr className="border-b border-border bg-muted/60 backdrop-blur-sm">
+          <th scope="col" className={thCls}>Mês</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Total Investido</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros do Mês</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros Acumulados</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Saldo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, i) => {
+          const isLast = i === data.length - 1
+          return (
+            <tr
+              key={row.period}
+              className={cn(
+                "border-b border-border/40 transition-colors hover:bg-muted/30",
+                i % 2 !== 0 && "bg-muted/10",
+                isLast && "border-b-0",
+              )}
+            >
+              <td className={cn(tdCls, isLast && "font-semibold")}>
+                {row.period}º mês
+              </td>
+              <td className={cn(tdCls, "text-right text-foreground", isLast && "font-semibold")}>
+                {fmtBRL(row.invested)}
+              </td>
+              <td className={cn(tdCls, "text-right text-emerald-600 dark:text-emerald-400", isLast && "font-semibold")}>
+                {fmtBRL(row.earnedThis)}
+              </td>
+              <td className={cn(tdCls, "text-right text-muted-foreground", isLast && "font-semibold text-foreground")}>
+                {fmtBRL(row.interest)}
+              </td>
+              <td className={cn(tdCls, "text-right", isLast ? "font-bold text-primary" : "text-foreground")}>
+                {fmtBRL(row.balance)}
+              </td>
+            </tr>
+          )
+        })}
+      </tbody>
+    </table>
   )
 }
