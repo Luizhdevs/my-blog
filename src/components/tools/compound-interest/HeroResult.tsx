@@ -53,20 +53,19 @@ export const HeroResult = memo(function HeroResult({ result }: HeroResultProps) 
   return (
     <section
       aria-label="Resultado da simulação"
-      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
     >
       {/* ── Hero number ───────────────────────────────────────── */}
       <div className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6 sm:pb-4">
         <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:mb-1.5">
           Montante Final
         </p>
-        <div className="min-w-0 overflow-hidden">
-          <AnimatedValue
-            value={result.finalAmount}
-            format={fmtBRL}
-            className="font-heading text-2xl font-bold tabular-nums text-primary sm:text-3xl lg:text-5xl"
-          />
-        </div>
+        {/* break-all prevents overflow on extreme values (R$ 1T+); block makes it apply */}
+        <AnimatedValue
+          value={result.finalAmount}
+          format={fmtBRL}
+          className="block break-all font-heading text-2xl font-bold tabular-nums text-primary sm:text-3xl lg:text-5xl"
+        />
       </div>
 
       {/* ── Proportion bar ────────────────────────────────────── */}
@@ -97,21 +96,24 @@ export const HeroResult = memo(function HeroResult({ result }: HeroResultProps) 
         </div>
       </div>
 
-      {/* ── Stats grid ────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-px border-t border-border bg-border sm:grid-cols-4">
+      {/* ── Stats grid ────────────────────────────────────────────
+          Mobile:  1-col list (label left / value right)
+          sm:      2×2 card grid
+          lg:      1×4 horizontal band                          */}
+      <div className="grid grid-cols-1 gap-px border-t border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
         {stats.map(stat => (
           <div
             key={stat.label}
-            className="flex flex-col gap-1 bg-card px-3 py-3 sm:px-4"
+            className="flex min-w-0 items-center justify-between gap-3 bg-card px-4 py-3 sm:flex-col sm:items-start sm:justify-start sm:gap-1"
           >
-            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {stat.label}
             </span>
             <AnimatedValue
               value={stat.value}
               format={stat.format}
               className={cn(
-                "font-heading text-xs font-bold tabular-nums leading-tight sm:text-sm lg:text-base",
+                "min-w-0 font-heading text-sm font-bold tabular-nums leading-tight",
                 stat.positive
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-foreground",

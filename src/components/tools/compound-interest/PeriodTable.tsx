@@ -80,7 +80,7 @@ export const PeriodTable = memo(function PeriodTable({ yearSummaries, monthlyPer
   return (
     <section
       aria-label="Tabela de evolução por período"
-      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-4">
@@ -146,7 +146,7 @@ export const PeriodTable = memo(function PeriodTable({ yearSummaries, monthlyPer
 
       {/* ── Table ──────────────────────────────────────────────── */}
       <div
-        className="overflow-x-auto overflow-y-auto overscroll-contain"
+        className="w-full overflow-x-auto overflow-y-auto overscroll-contain"
         style={{ maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined }}
       >
         {view === "annual" ? (

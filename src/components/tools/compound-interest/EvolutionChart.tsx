@@ -33,8 +33,10 @@ const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v)
 
 const fmtAxis = (v: number) => {
-  if (v >= 1_000_000) return `R$${(v / 1_000_000).toFixed(1)}M`
-  if (v >= 1_000)     return `R$${(v / 1_000).toFixed(0)}K`
+  if (v >= 1_000_000_000_000) return `R$${(v / 1_000_000_000_000).toFixed(1)}T`
+  if (v >= 1_000_000_000)     return `R$${(v / 1_000_000_000).toFixed(1)}B`
+  if (v >= 1_000_000)         return `R$${(v / 1_000_000).toFixed(1)}M`
+  if (v >= 1_000)             return `R$${(v / 1_000).toFixed(0)}K`
   return `R$${v.toFixed(0)}`
 }
 
@@ -58,25 +60,25 @@ function CustomTooltip({ active, payload, label }: ChartTooltipProps) {
   return (
     <div
       role="tooltip"
-      className="min-w-[180px] rounded-xl border border-border bg-popover px-3 py-2.5 shadow-xl text-sm sm:min-w-[190px] sm:px-4 sm:py-3"
+      className="min-w-[170px] rounded-xl border border-border bg-popover px-3 py-2.5 shadow-xl text-sm"
     >
       <p className="mb-2 font-semibold text-foreground">{label}</p>
       <dl className="flex flex-col gap-1.5">
-        <div className="flex justify-between gap-6">
+        <div className="flex justify-between gap-4">
           <dt className="flex items-center gap-1.5 text-muted-foreground">
             <span className="size-2 rounded-full bg-blue-500 shrink-0" />
             Investido
           </dt>
           <dd className="tabular-nums font-medium text-foreground">{fmtBRL(invested)}</dd>
         </div>
-        <div className="flex justify-between gap-6">
+        <div className="flex justify-between gap-4">
           <dt className="flex items-center gap-1.5 text-muted-foreground">
             <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
             Juros
           </dt>
           <dd className="tabular-nums font-medium text-emerald-600 dark:text-emerald-400">{fmtBRL(interest)}</dd>
         </div>
-        <div className="mt-1 flex justify-between gap-6 border-t border-border pt-2">
+        <div className="mt-1 flex justify-between gap-4 border-t border-border pt-2">
           <dt className="font-semibold text-foreground">Total</dt>
           <dd className="tabular-nums font-bold text-primary">{fmtBRL(balance)}</dd>
         </div>
@@ -114,7 +116,7 @@ export const EvolutionChart = memo(function EvolutionChart({ data, totalMonths }
   return (
     <section
       aria-label="Gráfico de evolução patrimonial"
-      className="overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5"
+      className="w-full min-w-0 overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5"
     >
       <div className="mb-3 sm:mb-4">
         <h3 className="font-heading text-sm font-semibold text-foreground sm:text-base">
@@ -125,10 +127,10 @@ export const EvolutionChart = memo(function EvolutionChart({ data, totalMonths }
         </p>
       </div>
 
-      {/* Responsive height: 220px mobile → 280px sm → 340px lg */}
-      <div className="h-[220px] sm:h-[280px] lg:h-[340px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
+      {/* w-full min-w-0 overflow-hidden prevents SVG from escaping the height box */}
+      <div className="h-[220px] w-full min-w-0 overflow-hidden sm:h-[280px] lg:h-[340px]">
+        <ResponsiveContainer width="100%" height="100%" debounce={50}>
+          <AreaChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="gradInvested" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%"  stopColor="#3B82F6" stopOpacity={0.75} />
@@ -158,7 +160,7 @@ export const EvolutionChart = memo(function EvolutionChart({ data, totalMonths }
               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
               axisLine={false}
               tickLine={false}
-              width={64}
+              width={56}
             />
             <Tooltip
               content={<CustomTooltip />}

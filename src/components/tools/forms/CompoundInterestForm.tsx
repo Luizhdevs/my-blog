@@ -178,7 +178,7 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
     <div className="grid gap-4 sm:gap-6 lg:grid-cols-[300px_1fr]">
 
       {/* ══ Form panel (sticky on lg) ═════════════════════════════ */}
-      <aside className="lg:sticky lg:top-24 lg:self-start">
+      <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
         <form
           noValidate
           aria-label="Calculadora de juros compostos"
@@ -392,7 +392,7 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
         role="region"
         aria-label="Resultados da simulação"
         aria-live="polite"
-        className="flex flex-col gap-4 sm:gap-6"
+        className="min-w-0 flex flex-col gap-4 sm:gap-6"
       >
         {submittedResult ? (
           <>
