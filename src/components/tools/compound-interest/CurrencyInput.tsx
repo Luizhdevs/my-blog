@@ -15,7 +15,6 @@ function fmtDisplay(v: number): string {
 
 function parseInput(s: string): number {
   // Brazilian: dot = thousand separator, comma = decimal
-  // Remove everything except digits and comma, treat comma as decimal
   const clean = s.replace(/[^\d,]/g, "").replace(",", ".")
   const n     = parseFloat(clean)
   return isNaN(n) ? 0 : n
@@ -44,12 +43,11 @@ export function CurrencyInput({
   describedBy,
   className,
 }: CurrencyInputProps) {
-  const [focused,   setFocused]   = useState(false)
-  const [rawInput,  setRawInput]  = useState("")
+  const [focused,  setFocused]  = useState(false)
+  const [rawInput, setRawInput] = useState("")
 
   function handleFocus() {
     setFocused(true)
-    // Show plain number so editing is easy
     setRawInput(value === 0 ? "" : String(value))
   }
 
@@ -85,7 +83,7 @@ export function CurrencyInput({
         aria-invalid={hasError ?? false}
         aria-describedby={describedBy}
         className={cn(
-          "h-9 w-full min-w-0 rounded-lg border border-input bg-transparent",
+          "h-11 w-full min-w-0 rounded-lg border border-input bg-transparent",
           "pl-9 pr-3 py-1 text-sm text-foreground outline-none transition-colors",
           "placeholder:text-muted-foreground",
           "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",

@@ -52,10 +52,12 @@ function downloadCSV(content: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-// ─── Table ────────────────────────────────────────────────────────────────────
+// ─── Table styles ─────────────────────────────────────────────────────────────
 
-const thCls = "px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap"
-const tdCls = "px-4 py-2.5 tabular-nums text-sm"
+const thCls = "px-3 py-2.5 sm:px-4 sm:py-3 text-left text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-muted-foreground whitespace-nowrap"
+const tdCls = "px-3 py-2 sm:px-4 tabular-nums text-xs sm:text-sm"
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 interface PeriodTableProps {
   yearSummaries:  YearSummary[]
@@ -80,16 +82,20 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
       aria-label="Tabela de evolução por período"
       className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
     >
-      {/* ── Header ────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-        <div className="flex items-center gap-3">
-          <Calendar className="size-4 text-muted-foreground" aria-hidden="true" />
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <Calendar className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <div>
-            <h3 className="font-heading text-base font-semibold text-foreground">
+            <h3 className="font-heading text-sm font-semibold text-foreground sm:text-base">
               Evolução Detalhada
             </h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              {rowCount} {view === "annual" ? (rowCount === 1 ? "ano" : "anos") : (rowCount === 1 ? "mês" : "meses")} de simulação
+              {rowCount}{" "}
+              {view === "annual"
+                ? rowCount === 1 ? "ano" : "anos"
+                : rowCount === 1 ? "mês" : "meses"}{" "}
+              de simulação
             </p>
           </div>
         </div>
@@ -108,7 +114,7 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
                 onClick={() => setView(v)}
                 aria-pressed={view === v}
                 className={cn(
-                  "rounded-md px-3 py-1 text-xs font-medium transition-all",
+                  "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all sm:px-3",
                   view === v
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -125,22 +131,25 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
             onClick={handleExport}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/50",
-              "px-3 py-1.5 text-xs font-medium text-muted-foreground",
+              "px-2.5 py-1.5 text-xs font-medium text-muted-foreground",
               "transition-colors hover:bg-muted hover:text-foreground",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             )}
             aria-label="Exportar tabela como CSV"
           >
             <Download className="size-3.5" aria-hidden="true" />
-            CSV
+            <span className="hidden sm:inline">CSV</span>
           </button>
         </div>
       </div>
 
-      {/* ── Table ─────────────────────────────────────────────── */}
+      {/* ── Table ──────────────────────────────────────────────── */}
       <div
-        className="overflow-x-auto overflow-y-auto"
-        style={{ maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined }}
+        className="overflow-x-auto overflow-y-auto overscroll-contain"
+        style={{
+          maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined,
+          WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
+        }}
       >
         {view === "annual" ? (
           <AnnualTable data={yearSummaries} />
@@ -156,13 +165,13 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
 
 function AnnualTable({ data }: { data: YearSummary[] }) {
   return (
-    <table className="w-full min-w-[580px] text-sm" role="table">
+    <table className="w-full min-w-[520px] text-sm" role="table">
       <thead className="sticky top-0 z-10">
         <tr className="border-b border-border bg-muted/60 backdrop-blur-sm">
           <th scope="col" className={thCls}>Ano</th>
           <th scope="col" className={cn(thCls, "text-right")}>Aportado</th>
           <th scope="col" className={cn(thCls, "text-right")}>Juros do Ano</th>
-          <th scope="col" className={cn(thCls, "text-right")}>Juros Acumulados</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros Acum.</th>
           <th scope="col" className={cn(thCls, "text-right")}>Patrimônio</th>
         </tr>
       </thead>
@@ -205,13 +214,13 @@ function AnnualTable({ data }: { data: YearSummary[] }) {
 
 function MonthlyTable({ data }: { data: PeriodSnapshot[] }) {
   return (
-    <table className="w-full min-w-[580px] text-sm" role="table">
+    <table className="w-full min-w-[520px] text-sm" role="table">
       <thead className="sticky top-0 z-10">
         <tr className="border-b border-border bg-muted/60 backdrop-blur-sm">
           <th scope="col" className={thCls}>Mês</th>
-          <th scope="col" className={cn(thCls, "text-right")}>Total Investido</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Total Invest.</th>
           <th scope="col" className={cn(thCls, "text-right")}>Juros do Mês</th>
-          <th scope="col" className={cn(thCls, "text-right")}>Juros Acumulados</th>
+          <th scope="col" className={cn(thCls, "text-right")}>Juros Acum.</th>
           <th scope="col" className={cn(thCls, "text-right")}>Saldo</th>
         </tr>
       </thead>

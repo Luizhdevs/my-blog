@@ -1,40 +1,49 @@
 "use client"
 
-import { useMemo, useEffect, useRef, useCallback } from "react"
-import { useForm, Controller }                      from "react-hook-form"
-import { zodResolver }                              from "@hookform/resolvers/zod"
-import dynamic                                      from "next/dynamic"
-import { RotateCcw }                                from "lucide-react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { useForm, Controller }                       from "react-hook-form"
+import { zodResolver }                               from "@hookform/resolvers/zod"
+import dynamic                                       from "next/dynamic"
+import { RotateCcw, Loader2, TrendingUp }            from "lucide-react"
 
 import {
   compoundInterestSchema,
   computeCompoundInterest,
   type CompoundInterestInput,
+  type CompoundInterestResult,
 } from "@/features/tools/tools/compound-interest"
-import { useToolUsageTracker }  from "@/hooks/useToolUsageTracker"
-import { CurrencyInput }        from "@/components/tools/compound-interest/CurrencyInput"
-import { HeroResult }           from "@/components/tools/compound-interest/HeroResult"
-import { PeriodTable }          from "@/components/tools/compound-interest/PeriodTable"
-import { cn }                   from "@/lib/utils"
+import { useToolUsageTracker } from "@/hooks/useToolUsageTracker"
+import { CurrencyInput }       from "@/components/tools/compound-interest/CurrencyInput"
+import { HeroResult }          from "@/components/tools/compound-interest/HeroResult"
+import { PeriodTable }         from "@/components/tools/compound-interest/PeriodTable"
+import { cn }                  from "@/lib/utils"
 
-// ─── Lazy charts (next/dynamic, ssr:false — no hydration mismatch) ────────────
-
-const ChartSkeleton = () => (
-  <div
-    className="animate-pulse rounded-2xl border border-border bg-muted/30"
-    style={{ height: "340px" }}
-    aria-hidden="true"
-  />
-)
+// ─── Lazy charts ──────────────────────────────────────────────────────────────
 
 const EvolutionChart = dynamic(
   () => import("@/components/tools/compound-interest/EvolutionChart").then(m => m.EvolutionChart),
-  { ssr: false, loading: ChartSkeleton },
+  {
+    ssr:     false,
+    loading: () => (
+      <div
+        className="animate-pulse rounded-2xl border border-border bg-muted/30 h-[220px] sm:h-[280px] lg:h-[340px]"
+        aria-hidden="true"
+      />
+    ),
+  },
 )
 
 const AllocationChart = dynamic(
   () => import("@/components/tools/compound-interest/AllocationChart").then(m => m.AllocationChart),
-  { ssr: false, loading: () => <div className="animate-pulse rounded-2xl border border-border bg-muted/30 h-[260px]" aria-hidden="true" /> },
+  {
+    ssr:     false,
+    loading: () => (
+      <div
+        className="animate-pulse rounded-2xl border border-border bg-muted/30 h-[180px] sm:h-[220px] lg:h-[260px]"
+        aria-hidden="true"
+      />
+    ),
+  },
 )
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -49,16 +58,17 @@ const DEFAULT_VALUES: CompoundInterestInput = {
   periodType:          "monthly",
 }
 
-// ─── Session storage helpers (no SSR touch) ───────────────────────────────────
+// ─── Session helpers ──────────────────────────────────────────────────────────
 
-function sessionLoad(): CompoundInterestInput {
+function sessionLoad(): { values: CompoundInterestInput; result: CompoundInterestResult | null } {
   try {
     const raw = sessionStorage.getItem(SESSION_KEY)
-    if (!raw) return DEFAULT_VALUES
+    if (!raw) return { values: DEFAULT_VALUES, result: null }
     const parsed = compoundInterestSchema.safeParse(JSON.parse(raw))
-    return parsed.success ? parsed.data : DEFAULT_VALUES
+    if (!parsed.success) return { values: DEFAULT_VALUES, result: null }
+    return { values: parsed.data, result: computeCompoundInterest(parsed.data) }
   } catch {
-    return DEFAULT_VALUES
+    return { values: DEFAULT_VALUES, result: null }
   }
 }
 
@@ -70,13 +80,13 @@ function sessionClear() {
   try { sessionStorage.removeItem(SESSION_KEY) } catch {}
 }
 
-// ─── Shared field styles ──────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const labelCls = "mb-1.5 block text-sm font-medium text-foreground"
 const errorCls = "mt-1 text-xs text-destructive"
 
 const addonInputCls = cn(
-  "h-9 w-full min-w-0 rounded-lg border border-input bg-transparent",
+  "h-11 w-full min-w-0 rounded-lg border border-input bg-transparent",
   "px-3 py-1 text-sm text-foreground outline-none transition-colors",
   "placeholder:text-muted-foreground",
   "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -84,12 +94,33 @@ const addonInputCls = cn(
   "dark:bg-input/30",
 )
 
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <div className="flex min-h-[240px] flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border px-6 py-10 text-center sm:min-h-[320px]">
+      <div className="flex size-12 items-center justify-center rounded-xl bg-muted">
+        <TrendingUp className="size-6 text-muted-foreground" aria-hidden="true" />
+      </div>
+      <div className="max-w-[240px]">
+        <p className="text-sm font-semibold text-foreground">Pronto para simular?</p>
+        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+          Preencha os parâmetros e clique em{" "}
+          <strong className="text-foreground">Calcular</strong> para ver a projeção completa.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Form ─────────────────────────────────────────────────────────────────────
 
 interface ToolFormProps { toolSlug: string }
 
 export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
-  const hydrated = useRef(false)
+  const hydrated                              = useRef(false)
+  const [submittedResult, setSubmittedResult] = useState<CompoundInterestResult | null>(null)
+  const [isCalculating,   setIsCalculating]   = useState(false)
 
   const {
     register,
@@ -97,58 +128,55 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
     watch,
     setValue,
     reset,
+    handleSubmit,
     formState: { errors },
   } = useForm<CompoundInterestInput>({
     resolver:      zodResolver(compoundInterestSchema),
     defaultValues: DEFAULT_VALUES,
-    mode:          "onChange",
+    mode:          "onBlur",
   })
 
-  // Hydrate from sessionStorage once (avoids SSR/client mismatch)
+  // Hydrate from sessionStorage once — also restores the last confirmed result
   useEffect(() => {
     if (hydrated.current) return
     hydrated.current = true
-    reset(sessionLoad())
+    const { values, result } = sessionLoad()
+    reset(values)
+    setSubmittedResult(result)
   }, [reset])
 
-  const values     = watch()
-  const periodType = values.periodType
+  const periodType = watch("periodType")
   const isMonthly  = periodType === "monthly"
 
-  // Memoised calculation — recomputes only when values change
-  const result = useMemo(() => {
-    const parsed = compoundInterestSchema.safeParse(values)
-    return parsed.success ? computeCompoundInterest(parsed.data) : null
-  }, [values])
+  useToolUsageTracker(toolSlug, submittedResult !== null)
 
-  // Keep last valid result visible while user edits an invalid interim state
-  const lastResult = useRef(result)
-  if (result !== null) lastResult.current = result
-  const displayed = result ?? lastResult.current
-
-  useToolUsageTracker(toolSlug, result !== null)
-
-  // Persist to sessionStorage on every valid change (session-scoped only)
-  useEffect(() => {
-    if (!hydrated.current) return
-    const parsed = compoundInterestSchema.safeParse(values)
-    if (parsed.success) sessionSave(parsed.data)
-  }, [values])
+  const onSubmit = useCallback((data: CompoundInterestInput) => {
+    setIsCalculating(true)
+    // Defer by one frame so the loading state paints before synchronous computation
+    setTimeout(() => {
+      const result = computeCompoundInterest(data)
+      setSubmittedResult(result)
+      sessionSave(data)
+      setIsCalculating(false)
+    }, 0)
+  }, [])
 
   const handleReset = useCallback(() => {
     sessionClear()
     reset(DEFAULT_VALUES)
+    setSubmittedResult(null)
   }, [reset])
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+    <div className="grid gap-4 sm:gap-6 lg:grid-cols-[300px_1fr]">
 
-      {/* ══ Form panel (sticky) ════════════════════════════════════ */}
+      {/* ══ Form panel (sticky on lg) ═════════════════════════════ */}
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <form
           noValidate
           aria-label="Calculadora de juros compostos"
-          className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-6 shadow-soft"
+          onSubmit={handleSubmit(onSubmit)}
+          className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 shadow-soft sm:gap-5 sm:p-6"
         >
           <div className="flex items-center justify-between">
             <h2 className="font-heading text-base font-semibold text-foreground">
@@ -158,7 +186,7 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
               type="button"
               onClick={handleReset}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs",
+                "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs",
                 "text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               )}
@@ -180,10 +208,10 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setValue("periodType", type, { shouldValidate: true })}
+                  onClick={() => setValue("periodType", type, { shouldValidate: false })}
                   aria-pressed={periodType === type}
                   className={cn(
-                    "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-150",
+                    "flex-1 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150",
                     periodType === type
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground",
@@ -258,6 +286,7 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
               <input
                 id="ci-rate"
                 type="number"
+                inputMode="decimal"
                 step="0.001"
                 min="0.001"
                 placeholder={isMonthly ? "1" : "12"}
@@ -283,12 +312,13 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
           {/* ── Período ─────────────────────────────────────────── */}
           <div>
             <label htmlFor="ci-periods" className={labelCls}>
-              Período
+              Período ({isMonthly ? "meses" : "anos"})
             </label>
             <div className="relative">
               <input
                 id="ci-periods"
                 type="number"
+                inputMode="numeric"
                 step="1"
                 min="1"
                 max={isMonthly ? 600 : 50}
@@ -315,47 +345,62 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
             )}
           </div>
 
-          {/* ── Taxa efetiva (informativo) ──────────────────────── */}
-          {displayed && (
+          {/* ── CTA Calcular ─────────────────────────────────────── */}
+          <button
+            type="submit"
+            disabled={isCalculating}
+            className={cn(
+              "mt-1 flex h-11 w-full items-center justify-center gap-2 rounded-xl",
+              "bg-primary px-4 text-sm font-semibold text-primary-foreground",
+              "transition-all hover:bg-primary/90 active:scale-[0.98]",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              "disabled:cursor-not-allowed disabled:opacity-70",
+            )}
+          >
+            {isCalculating ? (
+              <>
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                Calculando…
+              </>
+            ) : (
+              "Calcular"
+            )}
+          </button>
+
+          {/* ── Taxa efetiva (pós-cálculo) ───────────────────────── */}
+          {submittedResult && (
             <div className="rounded-lg bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
-              Taxa mensal efetiva:{" "}
+              Último cálculo — taxa mensal efetiva:{" "}
               <strong className="text-foreground">
-                {displayed.effectiveMonthlyRate.toFixed(4)}% a.m.
+                {submittedResult.effectiveMonthlyRate.toFixed(4)}% a.m.
               </strong>
             </div>
           )}
         </form>
       </aside>
 
-      {/* ══ Results panel ══════════════════════════════════════════ */}
+      {/* ══ Results panel ═════════════════════════════════════════ */}
       <div
         role="region"
         aria-label="Resultados da simulação"
         aria-live="polite"
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-4 sm:gap-6"
       >
-        {displayed ? (
+        {submittedResult ? (
           <>
-            <HeroResult result={displayed} />
+            <HeroResult result={submittedResult} />
             <EvolutionChart
-              data={displayed.monthlyPeriods}
-              totalMonths={displayed.monthlyPeriods.length}
+              data={submittedResult.monthlyPeriods}
+              totalMonths={submittedResult.monthlyPeriods.length}
             />
-            <AllocationChart data={displayed.yearSummaries} />
+            <AllocationChart data={submittedResult.yearSummaries} />
             <PeriodTable
-              yearSummaries={displayed.yearSummaries}
-              monthlyPeriods={displayed.monthlyPeriods}
+              yearSummaries={submittedResult.yearSummaries}
+              monthlyPeriods={submittedResult.monthlyPeriods}
             />
           </>
         ) : (
-          <div
-            role="status"
-            className="flex min-h-[240px] items-center justify-center rounded-2xl border border-dashed border-border"
-          >
-            <p className="text-sm text-muted-foreground">
-              Preencha ao menos um dos aportes para ver o resultado.
-            </p>
-          </div>
+          <EmptyState />
         )}
       </div>
     </div>
