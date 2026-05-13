@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import {
   AreaChart,
   Area,
@@ -91,7 +92,7 @@ interface EvolutionChartProps {
   totalMonths: number
 }
 
-export function EvolutionChart({ data, totalMonths }: EvolutionChartProps) {
+export const EvolutionChart = memo(function EvolutionChart({ data, totalMonths }: EvolutionChartProps) {
   const points   = sample(data)
   const longTerm = totalMonths > 24
 
@@ -196,4 +197,4 @@ export function EvolutionChart({ data, totalMonths }: EvolutionChartProps) {
       </div>
     </section>
   )
-}
+})

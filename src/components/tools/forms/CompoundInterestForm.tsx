@@ -119,6 +119,7 @@ interface ToolFormProps { toolSlug: string }
 
 export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
   const hydrated                              = useRef(false)
+  const resultsRef                            = useRef<HTMLDivElement>(null)
   const [submittedResult, setSubmittedResult] = useState<CompoundInterestResult | null>(null)
   const [isCalculating,   setIsCalculating]   = useState(false)
 
@@ -158,6 +159,12 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
       setSubmittedResult(result)
       sessionSave(data)
       setIsCalculating(false)
+      // On mobile (below lg), scroll results into view after React flushes the DOM
+      if (typeof window !== "undefined" && window.innerWidth < 1024) {
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+        }, 60)
+      }
     }, 0)
   }, [])
 
@@ -381,6 +388,7 @@ export function CompoundInterestForm({ toolSlug }: ToolFormProps) {
 
       {/* ══ Results panel ═════════════════════════════════════════ */}
       <div
+        ref={resultsRef}
         role="region"
         aria-label="Resultados da simulação"
         aria-live="polite"

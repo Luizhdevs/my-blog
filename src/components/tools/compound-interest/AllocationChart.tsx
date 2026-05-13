@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import {
   BarChart,
   Bar,
@@ -85,7 +86,7 @@ interface AllocationChartProps {
   data: YearSummary[]
 }
 
-export function AllocationChart({ data }: AllocationChartProps) {
+export const AllocationChart = memo(function AllocationChart({ data }: AllocationChartProps) {
   const chartData = data.map(y => ({
     label:    `${y.year}º`,
     invested: y.invested,
@@ -162,4 +163,4 @@ export function AllocationChart({ data }: AllocationChartProps) {
       </div>
     </section>
   )
-}
+})

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback } from "react"
-import { Download, Calendar }    from "lucide-react"
+import { memo, useState, useCallback } from "react"
+import { Download, Calendar }          from "lucide-react"
 
 import type {
   YearSummary,
@@ -64,7 +64,7 @@ interface PeriodTableProps {
   monthlyPeriods: PeriodSnapshot[]
 }
 
-export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps) {
+export const PeriodTable = memo(function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps) {
   const [view, setView] = useState<ViewMode>("annual")
 
   const handleExport = useCallback(() => {
@@ -83,11 +83,11 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
       className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
     >
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 sm:gap-3 sm:px-5 sm:py-4">
+      <div className="flex flex-col gap-2 border-b border-border px-4 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-5 sm:py-4">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <Calendar className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Calendar className="hidden size-4 shrink-0 text-muted-foreground sm:block" aria-hidden="true" />
           <div>
-            <h3 className="font-heading text-sm font-semibold text-foreground sm:text-base">
+            <h3 className="font-heading text-sm font-semibold text-foreground">
               Evolução Detalhada
             </h3>
             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -100,7 +100,7 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end sm:self-auto">
           {/* View toggle */}
           <div
             role="group"
@@ -114,13 +114,14 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
                 onClick={() => setView(v)}
                 aria-pressed={view === v}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all sm:px-3",
+                  "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all",
                   view === v
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {v === "annual" ? "Por Ano" : "Por Mês"}
+                <span className="hidden sm:inline">Por </span>
+                {v === "annual" ? "Ano" : "Mês"}
               </button>
             ))}
           </div>
@@ -146,10 +147,7 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
       {/* ── Table ──────────────────────────────────────────────── */}
       <div
         className="overflow-x-auto overflow-y-auto overscroll-contain"
-        style={{
-          maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined,
-          WebkitOverflowScrolling: "touch" as React.CSSProperties["WebkitOverflowScrolling"],
-        }}
+        style={{ maxHeight: view === "monthly" && monthlyPeriods.length > 24 ? "480px" : undefined }}
       >
         {view === "annual" ? (
           <AnnualTable data={yearSummaries} />
@@ -159,7 +157,7 @@ export function PeriodTable({ yearSummaries, monthlyPeriods }: PeriodTableProps)
       </div>
     </section>
   )
-}
+})
 
 // ─── Annual table ─────────────────────────────────────────────────────────────
 

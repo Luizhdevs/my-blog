@@ -1,5 +1,6 @@
 "use client"
 
+import { memo }              from "react"
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber"
 import { cn }                from "@/lib/utils"
 import type { CompoundInterestResult } from "@/features/tools/tools/compound-interest"
@@ -37,7 +38,7 @@ interface HeroResultProps {
   result: CompoundInterestResult
 }
 
-export function HeroResult({ result }: HeroResultProps) {
+export const HeroResult = memo(function HeroResult({ result }: HeroResultProps) {
   const investedPct = result.finalAmount > 0
     ? (result.totalInvested / result.finalAmount) * 100
     : 100
@@ -59,11 +60,13 @@ export function HeroResult({ result }: HeroResultProps) {
         <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground sm:mb-1.5">
           Montante Final
         </p>
-        <AnimatedValue
-          value={result.finalAmount}
-          format={fmtBRL}
-          className="font-heading text-3xl font-bold tabular-nums text-primary sm:text-4xl lg:text-5xl"
-        />
+        <div className="min-w-0 overflow-hidden">
+          <AnimatedValue
+            value={result.finalAmount}
+            format={fmtBRL}
+            className="font-heading text-2xl font-bold tabular-nums text-primary sm:text-3xl lg:text-5xl"
+          />
+        </div>
       </div>
 
       {/* ── Proportion bar ────────────────────────────────────── */}
@@ -101,14 +104,14 @@ export function HeroResult({ result }: HeroResultProps) {
             key={stat.label}
             className="flex flex-col gap-1 bg-card px-3 py-3 sm:px-4"
           >
-            <span className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[10px]">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {stat.label}
             </span>
             <AnimatedValue
               value={stat.value}
               format={stat.format}
               className={cn(
-                "font-heading text-sm font-bold tabular-nums leading-tight sm:text-base",
+                "font-heading text-xs font-bold tabular-nums leading-tight sm:text-sm lg:text-base",
                 stat.positive
                   ? "text-emerald-600 dark:text-emerald-400"
                   : "text-foreground",
@@ -119,4 +122,4 @@ export function HeroResult({ result }: HeroResultProps) {
       </div>
     </section>
   )
-}
+})
